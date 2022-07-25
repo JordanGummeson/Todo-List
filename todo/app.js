@@ -1,40 +1,93 @@
 let form = document.querySelector('#form');
 let list = document.querySelector('#list');
-let string
-form.addEventListener('keypress',submit);
+let text = document.querySelector('#text');
+
+let position
+
+form.addEventListener('submit',submit);
 list.addEventListener('click',remove);
 list.addEventListener('click',cross);
-list.innerHTML = JSON.parse(localStorage.getItem('savedList'));
+
+// retrieving from local storage
+let savedTodos = JSON.parse(localStorage.getItem("todos")) || [];
+for (let i = 0; i < savedTodos.length; i++) {
+  let newli = document.createElement("li");
+
+  newli.innerText = savedTodos[i].task;
+  newli.dataset.position = savedTodos[i].position;
+  
+  if (savedTodos[i].crossed)  newli.classList.toggle('crossed');
+
+  newBtn = document.createElement("button");
+  newBtn.appendChild(document.createTextNode('X'));
+  newli.appendChild(newBtn);
+
+  list.appendChild(newli);
+}
+
 //function used to cross out items on list
 function cross(e){
     if(e.target.tagName === 'LI'){
         e.target.classList.toggle('crossed');
-        string = JSON.stringify(list.innerHTML);
-localStorage.setItem('savedList',string);
+
+        if(savedTodos[e.target.dataset.position].crossed) savedTodos[e.target.dataset.position].crossed = false;
+        else savedTodos[e.target.dataset.position].crossed = true;
+        
+        localStorage.setItem("todos", JSON.stringify(savedTodos));
 }
 }
 //function used to remove items from list
 function remove(e){
 if(e.target.tagName === 'BUTTON'){
+
+    let sibling
+
+    savedTodos.splice(e.target.parentElement.dataset.position,1)
+
+    if(e.target.parentElement.nextSibling){
+        sibling = e.target.parentElement.nextSibling;
+        for(i =e.target.parentElement.dataset.position;i<savedTodos.length;i++){
+           
+            sibling.dataset.position = sibling.dataset.position -1;
+            sibling = sibling.nextSibling;
+
+            if(savedTodos[i])savedTodos[i].position =savedTodos[i].position -1;
+
+        }
+        
+
+    }
+    
+    localStorage.setItem("todos", JSON.stringify(savedTodos));
+
     e.target.parentElement.remove();
 };
-string = JSON.stringify(list.innerHTML);
-localStorage.setItem('savedList',string);
+
 }
-//function to submit text inside input field with enter key
+//function to submit text inside input field
 function submit(e){ 
-if (e.key === 'Enter') {
     e.preventDefault();
+
     newli = document.createElement("li");
-    let text = e.target.value;
-    newli.appendChild(document.createTextNode(text));
+    newli.innerText = text.value;
+
+    //saving to local storage
+    if(savedTodos.length) position = savedTodos.length;
+    else position = 0;
+
+
+    savedTodos.push({ task: newli.innerText, crossed: false, position: position });
+    localStorage.setItem("todos", JSON.stringify(savedTodos));
+
     newBtn = document.createElement("button");
     newBtn.appendChild(document.createTextNode('X'));
     newli.appendChild(newBtn);
+
+    newli.dataset.position =  savedTodos.length -1 ;
     list.appendChild(newli);
-    e.target.value = '';
-    string = JSON.stringify(list.innerHTML);
-    localStorage.setItem('savedList',string);
-};
+    
+    form.reset(); 
+
+
 }
 
